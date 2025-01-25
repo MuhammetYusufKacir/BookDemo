@@ -12,6 +12,10 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
 using BookDemo.Core.Models;
+using Microsoft.AspNetCore.Mvc;
+using FluentValidation;
+using Quartz;
+using FluentValidation.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -101,6 +105,45 @@ builder.Services.AddScoped<ICacheService, CacheService>();
 
 builder.Services.AddAutoMapper(typeof(BookProfile));
 
+builder.Services.AddControllersWithViews().AddFluentValidation(options =>
+{
+    options.RegisterValidatorsFromAssemblyContaining<BookValidators>();
+    options.RegisterValidatorsFromAssemblyContaining<CategoryValidators>();
+
+});
+
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var errors = context.ModelState
+            .Where(m => m.Value.Errors.Count > 0)
+            .SelectMany(m => m.Value.Errors)
+            .Select(e => e.ErrorMessage)
+            .ToList();
+
+        var response = new ApiResponse<object>
+        (
+            success: false,
+            data: null,
+            message: "Validation failed",
+            statusCode: 400
+        )
+        {
+            Errors = errors
+        };
+
+        return new BadRequestObjectResult(response);
+    };
+});
+
+builder.Services.AddQuartz(q =>
+{
+    q.UseMicrosoftDependencyInjectionJobFactory();
+});
+
+builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -114,5 +157,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.UseStaticFiles();
 
 app.Run();

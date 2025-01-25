@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using System.Security.Claims;
 using AutoMapper;
 using BookDemo.Core.Entities;
 using BookDemo.Core.Interfaces;
@@ -23,6 +24,8 @@ namespace BookDemo.Application.Services
             _httpContextAccessor = httpContextAccessor;
             _cacheService = cacheService;
         }
+
+
         public static class CacheKeyHelper
         {
             public const string CacheKey = "Books_List";
@@ -32,7 +35,7 @@ namespace BookDemo.Application.Services
             try
             {
                 string cacheKey = CacheKeyHelper.CacheKey;
-                 
+
                 var cacheData = await _cacheService.GetAsync<ApiResponse<List<BookDTO>>>(cacheKey);
                 if (cacheData != null)
                 {
@@ -41,10 +44,10 @@ namespace BookDemo.Application.Services
 
                 var books = await _bookRepository.GetAllAsync(b => b.Status == EntityStatus.Active);
                 var bookDtos = _mapper.Map<List<BookDTO>>(books);
-                
+
                 var apiResponse = new ApiResponse<List<BookDTO>>(true, bookDtos, "Books retrieved successfully.", 200);
-            
-                await _cacheService.SetAsync(cacheKey, apiResponse, TimeSpan.FromMinutes(10)); 
+
+                await _cacheService.SetAsync(cacheKey, apiResponse, TimeSpan.FromMinutes(10));
 
                 return apiResponse;
             }
@@ -58,7 +61,7 @@ namespace BookDemo.Application.Services
         {
             try
             {
-                
+
                 string cacheKey = CacheKeyHelper.CacheKey;
 
                 var cachedBooks = await _cacheService.GetAsync<List<BookDTO>>(cacheKey);
@@ -95,35 +98,6 @@ namespace BookDemo.Application.Services
 
         public async Task<ApiResponse<BookDTO>> AddBook(BookDTO newBookDto)
         {
-            /*try
-            {
-                // Kullanıcı ID'sini JWT'den al
-                var userId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                    return new ApiResponse<BookDTO>(false, null, "User ID not found.", 401);
-
-                // Kategori ID'si ile kategori kontrolü yap
-                var category = await _bookRepository.GetCategoryByIdAsync(newBookDto.CategoryId);
-                if (category == null)
-                {
-                    return new ApiResponse<BookDTO>(false, null, "Category not found.", 404);
-                }
-      
-                var newBook = _mapper.Map<Book>(newBookDto);
-                newBook.UserId = Convert.ToInt32(userId);
-                newBook.CategoryId = newBookDto.CategoryId;
-
-                await _bookRepository.AddAsync(newBook);
-
-                // Kitap DTO'suna dönüştür
-                var createdBookDto = _mapper.Map<BookDTO>(newBook);
-
-                return new ApiResponse<BookDTO>(true, createdBookDto, "Book added successfully.", 201);
-            }
-            catch (Exception ex)
-            {
-                return new ApiResponse<BookDTO>(false, null, ex.Message, 500);
-            }*/
 
             try
             {
@@ -138,7 +112,7 @@ namespace BookDemo.Application.Services
 
                 var createdBookDto = _mapper.Map<BookDTO>(newBook);
                 string cacheKey = CacheKeyHelper.CacheKey;
-                await _cacheService.RemoveAsync(cacheKey); 
+                await _cacheService.RemoveAsync(cacheKey);
 
                 return new ApiResponse<BookDTO>(true, createdBookDto, "Book added successfully.", 201);
             }
@@ -146,7 +120,10 @@ namespace BookDemo.Application.Services
             {
                 return new ApiResponse<BookDTO>(false, null, ex.Message, 500);
             }
+
         }
+
+
 
         public async Task<ApiResponse<BookDTO>> UpdateOneBook(int id, BookDTO updatedBookDto)
         {
@@ -218,7 +195,7 @@ namespace BookDemo.Application.Services
             {
                 string cacheKey = CacheKeyHelper.CacheKey;
                 var cachedBooks = await _cacheService.GetAsync<List<BookDTO>>(cacheKey);
-                if (cachedBooks != null) 
+                if (cachedBooks != null)
                 {
                     return new ApiResponse<List<BookDTO>>(true, cachedBooks, "Books retrieved successfully", 200);
                 }
@@ -246,7 +223,7 @@ namespace BookDemo.Application.Services
                 var cachedBooks = await _cacheService.GetAsync<List<BookDTO>>(cacheKey);
                 if (cachedBooks != null)
                 {
-                    return new ApiResponse<List<BookDTO>>(true, cachedBooks, "Books retrieved successfully with their categories.",200);
+                    return new ApiResponse<List<BookDTO>>(true, cachedBooks, "Books retrieved successfully with their categories.", 200);
                 }
 
                 var books = await _bookRepository.GetBooksWithCategoryAsync();
@@ -264,6 +241,36 @@ namespace BookDemo.Application.Services
             }
         }
 
+        public async Task<ApiResponse<PagedResult<BookDTO>>> GetPage(int pageNumber, int pageSize)
+        {
+            try
+            {
+                var pagedResult = await _bookRepository.GetPage(pageNumber, pageSize);
+
+                var mappedBooks = pagedResult.Items.Select(book => new BookDTO
+                {
+                    Id = book.Id,
+                    Name = book.Name,
+                    Price = book.Price,
+                    CategoryId = book.CategoryId,
+                    ImagePath = book.ImagePath
+                }).ToList();
+
+                var result = new PagedResult<BookDTO>
+                {
+                    Items = mappedBooks,
+                    TotalItems = pagedResult.TotalItems,
+                    PageNumber = pagedResult.PageNumber,
+                    PageSize = pagedResult.PageSize
+                };
+
+                return new ApiResponse<PagedResult<BookDTO>>(true, result , "Books retrieved successfully with their categories.", 200);
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<PagedResult<BookDTO>>(false, null, ex.Message, 500);
+            }
+        }
 
     }
 }

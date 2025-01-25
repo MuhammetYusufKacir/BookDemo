@@ -5,6 +5,8 @@ using AutoMapper.Configuration.Annotations;
 using BookDemo.Core.Entities;
 using BookDemo.Core.Interfaces;
 using BookDemo.Core.Models;
+using BookDemo.Infrastructure.Data;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
@@ -317,17 +319,19 @@ namespace BookDemo.Application.Services
         private readonly ICategoryRepository _categoryRepository;
         private readonly IMapper _mapper;
         private readonly ICacheService _cacheService;
+        private readonly AppDbContext _context;
 
         public static class CacheKeyHelper
         {
             public const string CacheKey = "Category_List";
         }
 
-        public CategoryService(ICategoryRepository categoryRepository, IMapper mapper, ICacheService cacheService)
+        public CategoryService(ICategoryRepository categoryRepository, IMapper mapper, ICacheService cacheService, AppDbContext context)
         {
             _categoryRepository = categoryRepository;
             _mapper = mapper;
             _cacheService = cacheService;
+            _context = context;
         }
 
         public async Task<ApiResponse<List<CategoryDTO>>> GetAllCategoriesAsync(Expression<Func<Category, bool>> filter = null)
@@ -350,6 +354,8 @@ namespace BookDemo.Application.Services
             {
                 return new ApiResponse<List<CategoryDTO>>(false, null, ex.Message, 500);
             }
+
+            
         }
 
         public async Task<ApiResponse<CategoryDTO>> GetCategoryByIdAsync(int id)

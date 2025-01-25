@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using BookDemo.Core.Entities;
 using BookDemo.Core.Interfaces;
+using BookDemo.Core.Models;
 using BookDemo.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,12 +10,13 @@ namespace BookDemo.Infrastructure.Repositories
     public class CategoryRepository : ICategoryRepository
     {
         private readonly AppDbContext _context;
-        public CategoryRepository( AppDbContext context)
+        public CategoryRepository(AppDbContext context)
         {
             _context = context;
         }
         public async Task<List<Category>> GetAllAsync(Expression<Func<Category, bool>> filter = null)
         {
+
             List<Category> categories;
             if (filter != null)
             {
@@ -26,6 +28,7 @@ namespace BookDemo.Infrastructure.Repositories
             }
 
             return categories;
+
         }
         public async Task<Category> GetByIdAsync(int id)
         {

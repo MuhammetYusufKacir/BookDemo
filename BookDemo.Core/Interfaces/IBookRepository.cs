@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BookDemo.Core.Entities;
 using BookDemo.Core.Models;
+using Microsoft.Build.Tasks.Deployment.Bootstrapper;
 
 namespace BookDemo.Core.Interfaces
 {
@@ -20,5 +21,7 @@ namespace BookDemo.Core.Interfaces
         Task<List<Book>> GetBooksWithCategoryAsync();
         Task<Category> GetCategoryByIdAsync(int categoryId);
         Task DeleteAllAsync();
+        Task<PagedResult<Book>> GetPage(int pageNumber, int pageSize);
+
     }
 }

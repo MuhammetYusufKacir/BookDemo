@@ -10,6 +10,7 @@ namespace BookDemo.Core.Interfaces
     using System.Linq.Expressions;
     using BookDemo.Core.Entities;
     using BookDemo.Core.Models;
+    using Microsoft.Build.Tasks.Deployment.Bootstrapper;
 
 
     /* public interface IBookService
@@ -34,7 +35,8 @@ ApiResponse<List<Book>> GetBooksWithCategory();
         Task<ApiResponse<List<BookDTO>>> DeleteAllBooks();
         Task<ApiResponse<List<BookDTO>>> GetBooksByCategory(int categoryId);
         Task<ApiResponse<List<BookDTO>>> GetBooksWithCategory();
-  
+        Task<ApiResponse<PagedResult<BookDTO>>> GetPage(int pageNumber, int pageSize);
+
     }
 
 }

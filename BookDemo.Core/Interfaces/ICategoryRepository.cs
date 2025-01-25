@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using BookDemo.Core.Entities;
+using BookDemo.Core.Models;
 
 namespace BookDemo.Core.Interfaces
 {

@@ -2,6 +2,7 @@
 using BookDemo.Core.Entities;
 using BookDemo.Core.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Build.Tasks.Deployment.Bootstrapper;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -20,7 +21,6 @@ namespace BookDemo.Infrastructure.Data
         public DbSet<Book> Books { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<User> Users { get; set; }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Book>()

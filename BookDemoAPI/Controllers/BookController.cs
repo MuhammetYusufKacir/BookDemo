@@ -378,16 +378,21 @@ namespace BookDemoAPI.Controllers
 
         }
 
-        // Tüm kitapları getiren endpoint
-        [HttpGet]
-        public async Task<IActionResult> GetAllBooks()
+        [HttpGet("GetProducts")]
+        public async Task<IActionResult> GetPage(int pageNumber = 1, int pageSize = 10)
         {
-            var response = await _bookService.GetAll();
-            if (!response.Success)
-                return StatusCode(response.StatusCode, response);
+            
+            var response = await _bookService.GetPage(pageNumber, pageSize);
 
-            var bookDTOs = _mapper.Map<List<BookDTO>>(response.Data);
-            return Ok(new ApiResponse<List<BookDTO>>(true, bookDTOs, "Books fetched successfully", 200));
+            
+            if (response.Success)
+            {
+                return Ok(response); 
+            }
+            else
+            {
+                return StatusCode(response.StatusCode, response); 
+            }
         }
 
         [HttpGet("{id:int}")]
