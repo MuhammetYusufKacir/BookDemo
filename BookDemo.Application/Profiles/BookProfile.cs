@@ -16,6 +16,14 @@ namespace BookDemo.Application.Profiles
             CreateMap<User, UserDTO>().ReverseMap();
             CreateMap<ApiResponse<BookDTO>, BookDTO>()
                     .ConvertUsing(src => src.Data);
+            CreateMap<Cart, CartDTO>().ReverseMap();
+            CreateMap<CartItem, CartItemDTO>().ReverseMap();
+            CreateMap<Cart, CartDTO>()
+           .ForMember(dest => dest.CartItems, opt => opt.MapFrom(src => src.CartItem));
+
+            CreateMap<CartItem, CartItemDTO>()
+                .ForMember(dest => dest.BookId, opt => opt.MapFrom(src => src.BookId))
+                .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.Price));
 
         }
     }

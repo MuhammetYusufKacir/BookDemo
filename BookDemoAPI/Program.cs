@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc;
 using FluentValidation;
 using Quartz;
 using FluentValidation.AspNetCore;
+using BookDemo.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -102,6 +103,7 @@ builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICacheService, CacheService>();
+builder.Services.AddScoped<ICartService, CartService>();
 
 builder.Services.AddAutoMapper(typeof(BookProfile));
 

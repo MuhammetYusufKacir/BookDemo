@@ -378,7 +378,7 @@ namespace BookDemoAPI.Controllers
 
         }
 
-        [HttpGet("GetProducts")]
+        [HttpGet("GetPage")]
         public async Task<IActionResult> GetPage(int pageNumber = 1, int pageSize = 10)
         {
             
@@ -392,6 +392,21 @@ namespace BookDemoAPI.Controllers
             else
             {
                 return StatusCode(response.StatusCode, response); 
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAllBook()
+        {
+            var response = await _bookService.GetAll();
+
+            if (response.Success)
+            {
+                return Ok(response);
+            }
+            else
+            {
+                return StatusCode(response.StatusCode, response);
             }
         }
 

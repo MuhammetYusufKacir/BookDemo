@@ -21,6 +21,8 @@ namespace BookDemo.Infrastructure.Data
         public DbSet<Book> Books { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Cart> Carts { get; set; }
+        public DbSet<CartItem> CartItems { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Book>()
@@ -48,17 +50,17 @@ namespace BookDemo.Infrastructure.Data
                 {
                     if (entry.State == EntityState.Added)
                     {
-                        entry.Entity.userCratedId = Convert.ToInt32(userId);
+                        entry.Entity.UserCratedId = Convert.ToInt32(userId);
                     }
                     else if (entry.State == EntityState.Modified)
 
                     {
-                        entry.Entity.userUpdatedId = Convert.ToInt32(userId);
+                        entry.Entity.UserCratedId = Convert.ToInt32(userId);
                     }
 
                     else if (entry.State == EntityState.Deleted)
                     {
-                        entry.Entity.userCratedId = Convert.ToInt32(userId);
+                        entry.Entity.UserCratedId = Convert.ToInt32(userId);
                     }
                 }
             }

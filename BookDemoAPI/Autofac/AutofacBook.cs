@@ -18,6 +18,8 @@ namespace BookDemoAPI.Autofac
             builder.RegisterType<UserRepository>().As<IUserRepository>().InstancePerLifetimeScope();
             builder.RegisterType<UserService>().As<IUserService>().InstancePerLifetimeScope();
             builder.RegisterType<HttpContextAccessor>().As<IHttpContextAccessor>().InstancePerLifetimeScope();
+            builder.RegisterType<CartService>().As<ICartService>().InstancePerLifetimeScope();
+            builder.RegisterType<CartRepository>().As<ICartRepository>().InstancePerLifetimeScope();
             return builder;
         }
     }
