@@ -16,7 +16,6 @@ using Microsoft.AspNetCore.Mvc;
 using FluentValidation;
 using Quartz;
 using FluentValidation.AspNetCore;
-using BookDemo.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -106,6 +105,16 @@ builder.Services.AddScoped<ICacheService, CacheService>();
 builder.Services.AddScoped<ICartService, CartService>();
 
 builder.Services.AddAutoMapper(typeof(BookProfile));
+
+builder.Services.AddHttpClient<ExternalApiService>(client =>
+{
+    client.BaseAddress = new Uri("http://localhost:5055"); 
+    client.Timeout = TimeSpan.FromSeconds(30); 
+});
+
+
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddHttpClient<ExternalApiService>();
 
 builder.Services.AddControllersWithViews().AddFluentValidation(options =>
 {

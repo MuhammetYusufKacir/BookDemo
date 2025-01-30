@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using BookDemo.Core.Entities;
 using BookDemo.Core.Interfaces;
 using BookDemo.Core.Models;
-using BookDemo.Infrastructure.Repositories;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
+
 
 namespace BookDemo.Application.Services
 {
@@ -17,13 +13,15 @@ namespace BookDemo.Application.Services
         private readonly IBookRepository _bookRepository;
         private readonly ICacheService _cacheService;
         private readonly IMapper _mapper;
+        private readonly ExternalApiService _externalApiService;
 
-        public CartService(ICartRepository cartRepository, IBookRepository bookRepository, ICacheService cacheService, IMapper mapper)
+        public CartService(ICartRepository cartRepository, IBookRepository bookRepository, ICacheService cacheService, IMapper mapper, ExternalApiService externalApiService)
         {
             _cartRepository = cartRepository;
             _bookRepository = bookRepository;
             _cacheService = cacheService;
             _mapper = mapper;
+            _externalApiService = externalApiService;
         }
         public static class CacheKeyHelper
         {
@@ -40,7 +38,7 @@ namespace BookDemo.Application.Services
                 {
                     return new ApiResponse<CartDTO>(false, null, "Invalid user ID.", 400);
                 }
-
+                
                 string cacheKey = CacheKeyHelper.GetCacheKeyForCart(userId);
                 var cacheData = await _cacheService.GetAsync<ApiResponse<CartDTO>>(cacheKey);
                 if (cacheData != null)
@@ -53,9 +51,11 @@ namespace BookDemo.Application.Services
                 {
                     return new ApiResponse<CartDTO>(false, null, "Cart not found.", 404);
                 }
+                if (cart.Sold == true)
+                    return new ApiResponse<CartDTO>(false, null, "Cart has been purchased", 404);
 
                 var cartDto = _mapper.Map<CartDTO>(cart);
-              
+
                 cartDto.TotalPrice = cartDto.CartItems.Sum(item => item.Price * item.Quantity);
                 var apiResponse = new ApiResponse<CartDTO>(true, cartDto, "Cart retrieved successfully", 200);
                 await _cacheService.SetAsync(cacheKey, apiResponse, TimeSpan.FromMinutes(10));
@@ -76,7 +76,8 @@ namespace BookDemo.Application.Services
             {
                 string cacheKey = CacheKeyHelper.GetCacheKeyForCart(userId);
                 var cart = await _cartRepository.GetCartByUserIdAsync(userId);
-
+                if (cart.Sold == true)
+                    return new ApiResponse<CartDTO>(false, null, "Cart has been purchased, you cannot add books.", 404);
                 if (cart == null)
                 {
                     cart = new Cart
@@ -129,11 +130,10 @@ namespace BookDemo.Application.Services
             {
                 string cacheKey = CacheKeyHelper.GetCacheKeyForCart(userId);
 
-                // Cache'den sepeti al
+
                 var cacheCart = await _cacheService.GetAsync<CartDTO>(cacheKey);
                 if (cacheCart == null)
                 {
-                    // Eğer cache boşsa, veritabanından sepeti getir
                     var cart = await _cartRepository.GetCartByUserIdAsync(userId);
                     if (cart == null)
                         return new ApiResponse<CartDTO>(false, null, "Cart not found.", 404);
@@ -145,10 +145,9 @@ namespace BookDemo.Application.Services
                 if (cartItem == null)
                     return new ApiResponse<CartDTO>(false, null, "Book not found in cart.", 404);
 
-                // Quantity kontrolü
+
                 if (cartItem.Quantity <= quantityToRemove)
                 {
-                    // Eğer miktar eşitse veya daha azsa, tüm ürünü çıkar
                     cacheCart.CartItems.Remove(cartItem);
                 }
                 else
@@ -156,10 +155,8 @@ namespace BookDemo.Application.Services
                     cartItem.Quantity -= quantityToRemove;
                 }
 
-                // Cache'i güncelle
-                await _cacheService.SetAsync(cacheKey, cacheCart, TimeSpan.FromMinutes(10));
 
-                // Veritabanında da güncelleme yap
+                await _cacheService.SetAsync(cacheKey, cacheCart, TimeSpan.FromMinutes(10));
                 var dbCartForUpdate = await _cartRepository.GetCartByUserIdAsync(userId);
                 if (dbCartForUpdate != null)
                 {
@@ -178,7 +175,6 @@ namespace BookDemo.Application.Services
                     }
                 }
 
-                // Güncellenmiş CartDTO'yu oluştur
                 var updatedCartDto = _mapper.Map<CartDTO>(dbCartForUpdate);
 
                 return new ApiResponse<CartDTO>(true, updatedCartDto, "Book removed from cart successfully.", 200);
@@ -189,5 +185,78 @@ namespace BookDemo.Application.Services
             }
         }
 
+
+        public async Task<ApiResponse<bool>> UpdateSoldStatusAsync(int cartId)
+        {
+            try
+            {
+                var cart = await _cartRepository.GetCartByIdAsync(cartId);
+                if (cart == null)
+                {
+                    return new ApiResponse<bool>(false, "Cart not found.");
+                }
+
+                if (cart.Sold == true)
+                    return new ApiResponse<bool>(false, "Cart has been purchased.");
+                var externalApiResponse = await _externalApiService.UpdateSoldStatusAsync(cart);
+
+                if (externalApiResponse == null || !externalApiResponse.Success)
+                {
+                    return new ApiResponse<bool>(false, externalApiResponse?.Message ?? "Error updating sold status.");
+                }
+
+                cart.Sold = externalApiResponse.Sold;
+
+                return new ApiResponse<bool>(true, "Sold status updated successfully.");
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<bool>(false, $"Error: {ex.Message}");
+            }
+        }
+
+        public async Task<Cart> GetCartByIdAsync(int id)
+        {
+            var cart = await _cartRepository.GetCartByIdAsync(id);
+            return cart;
+        }
+
+        public async Task<CartSalesResponse> UpdateCartAsync(Cart cart)
+        {
+            try
+            {
+
+                var existingCart = await _cartRepository.GetCartByIdAsync(cart.Id);
+                if (existingCart == null)
+                {
+                    return new CartSalesResponse
+                    {
+                        Success = false,
+                        Message = "Cart not found."
+                    };
+                }
+
+
+                existingCart.Sold = true;
+                await _cartRepository.UpdateCartAsync(existingCart);
+
+
+                return new CartSalesResponse
+                {
+                    Success = true,
+                    Message = "Sold status updated successfully.",
+                    Sold = existingCart.Sold
+                };
+            }
+            catch (Exception ex)
+            {
+                return new CartSalesResponse
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                };
+            }
+        }
     }
 }
+

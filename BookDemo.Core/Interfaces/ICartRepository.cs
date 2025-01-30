@@ -17,6 +17,8 @@ namespace BookDemo.Core.Interfaces
         Task<CartItem> GetCartItemAsync(int cartId, int bookId);
         Task RemoveCartItemAsync(CartItem cartItem);
         Task UpdateCartAsync(Cart cart);
+        Task<Cart> GetCartByIdAsync(int cartId);
         Task SaveChangesAsync();
+
     }
 }

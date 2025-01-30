@@ -23,7 +23,7 @@ namespace BookDemoAPI.Controllers
             var result = await _cartService.GetCartAsync(userId);
             return Ok(result);
         }
-        [Authorize(Roles ="admin")]
+        [Authorize(Roles = "admin")]
         [HttpPost("add")]
         public async Task<IActionResult> AddToCart(int bookId, int quantity)
         {
@@ -32,15 +32,25 @@ namespace BookDemoAPI.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles ="admin")]
+        [Authorize(Roles = "admin")]
         [HttpDelete("remove")]
-        public async Task<IActionResult> RemoveFromCart(int bookId,int quantityToRemove)
+        public async Task<IActionResult> RemoveFromCart(int bookId, int quantityToRemove)
         {
-            var userId = User.Claims.FirstOrDefault(c=>c.Type== ClaimTypes.NameIdentifier)?.Value;
-            var result = await _cartService.RemoveFromCartAsync(userId,bookId,quantityToRemove);
+            var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            var result = await _cartService.RemoveFromCartAsync(userId, bookId, quantityToRemove);
             return Ok(result);
         }
 
-        
+        [HttpPut("update-sold/{cartId}")]
+        public async Task<IActionResult> UpdateSoldStatus(int cartId)
+        {
+            var result = await _cartService.UpdateSoldStatusAsync(cartId);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+
+            return Ok(result.Message);
+        }
     }
 }

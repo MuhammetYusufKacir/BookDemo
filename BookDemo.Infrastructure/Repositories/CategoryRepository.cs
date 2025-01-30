@@ -20,11 +20,11 @@ namespace BookDemo.Infrastructure.Repositories
             List<Category> categories;
             if (filter != null)
             {
-                categories = await _context.Categories.Where(filter).ToListAsync(); // Filtreli sorgu
+                categories = await _context.Categories.Where(filter).ToListAsync(); 
             }
             else
             {
-                categories = await _context.Categories.ToListAsync(); // Tüm kategoriler
+                categories = await _context.Categories.ToListAsync(); 
             }
 
             return categories;

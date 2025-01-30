@@ -45,7 +45,7 @@ namespace BookDemo.Infrastructure.Repositories
         public async Task<CartItem> GetCartItemAsync(int cartId, int bookId)
         {
             return await _context.CartItems
-                .FirstOrDefaultAsync(ci => ci.CartId== cartId && ci.BookId == bookId);
+                .FirstOrDefaultAsync(ci => ci.CartId == cartId && ci.BookId == bookId);
         }
         public async Task RemoveCartItemAsync(CartItem cartItem)
         {
@@ -59,6 +59,10 @@ namespace BookDemo.Infrastructure.Repositories
         {
             _context.Carts.Update(cart);
             await _context.SaveChangesAsync();
+        }
+        public async Task<Cart> GetCartByIdAsync(int cartId)
+        {
+            return await _context.Carts.FindAsync(cartId);
         }
     }
 }

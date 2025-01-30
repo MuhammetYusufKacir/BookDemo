@@ -10,7 +10,7 @@ namespace BookDemo.Core.Entities
     {   
         public string UserId { get; set; }
         public DateTime CrateDate { get; set; }
-
+        public bool Sold { get; set; }
         public ICollection<CartItem> CartItem { get; set; }
     }
 }

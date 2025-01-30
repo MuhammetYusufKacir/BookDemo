@@ -8,9 +8,7 @@ namespace BookDemo.Application.Profiles
     {
         public BookProfile()
         {
-            //CreateMap<Book, BookDTO>()
-            //    .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.Name))
-            //    .ReverseMap();
+           
             CreateMap<Book, BookDTO>().ReverseMap();
             CreateMap<Category, CategoryDTO>().ReverseMap();
             CreateMap<User, UserDTO>().ReverseMap();

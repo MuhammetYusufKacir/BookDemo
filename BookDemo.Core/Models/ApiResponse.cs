@@ -25,6 +25,12 @@ namespace BookDemo.Core.Models
             Errors = new List<string>();
         }
 
+        public ApiResponse(bool success, string message)
+        {
+            Success = success;
+            Message = message;
+        }
+
     }
 }
 
